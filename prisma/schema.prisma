@@ -1,7 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// HYROX Performance OS — schema do banco de dados
+// Uso individual: nao ha tabela de usuarios/multi-tenancy aqui de proposito.
+// O Supabase Auth protege o acesso a aplicacao (uma unica conta); todos os
+// dados abaixo pertencem a esse unico atleta.
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +10,216 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum WorkoutCategory {
+  STRENGTH
+  HYROX
+  RUNNING
+}
+
+enum PlannedWorkoutStatus {
+  PLANNED
+  COMPLETED
+  RESCHEDULED
+  CANCELLED
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum FoodSource {
+  USDA
+  OPEN_FOOD_FACTS
+  CUSTOM
+}
+
+// ---------- Planejamento e treinos ----------
+
+/// Modelo reutilizavel de treino (Treino A/B/C, HYROX "Picadinho", corridas 5/8/10/12km).
+/// `structure` guarda a composicao flexivel (rounds, blocos, exercicios) como JSON;
+/// o formato e validado em codigo por um discriminated union Zod (nao no banco),
+/// porque cada categoria tem uma forma bem diferente (lista de exercicios x
+/// blocos de estacoes com isometria x alvo de distancia/pace).
+model WorkoutTemplate {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  category    WorkoutCategory
+  description String?
+  structure   Json
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  plannedWorkouts PlannedWorkout[]
+
+  @@index([category])
+}
+
+/// Entrada no calendario semanal. So vira um WorkoutLog quando concluida.
+model PlannedWorkout {
+  id         String               @id @default(cuid())
+  date       DateTime             @db.Date
+  order      Int                  @default(0)
+  status     PlannedWorkoutStatus @default(PLANNED)
+  category   WorkoutCategory
+  adHocLabel String?
+  notes      String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  templateId String?
+  template   WorkoutTemplate? @relation(fields: [templateId], references: [id])
+
+  log GarminActivity? @relation("PlannedWorkoutToGarminActivity")
+  workoutLog WorkoutLog?
+
+  @@index([date])
+}
+
+/// Registro criado somente ao marcar um PlannedWorkout como concluido.
+/// Uma unica tabela para os 3 tipos (com colunas anulaveis especificas de corrida)
+/// em vez de 3 tabelas separadas: simplifica consultas de dashboard ("todos os
+/// treinos da semana") nessa escala de uso pessoal.
+model WorkoutLog {
+  id               String          @id @default(cuid())
+  plannedWorkoutId String          @unique
+  plannedWorkout   PlannedWorkout  @relation(fields: [plannedWorkoutId], references: [id], onDelete: Cascade)
+  category         WorkoutCategory
+  completedAt      DateTime        @default(now())
+
+  durationMinutes Int?
+  avgHeartRate    Int?
+  maxHeartRate    Int?
+  calories        Int?
+  notes           String?
+
+  // especifico de corrida
+  distanceKm   Float?
+  paceSecPerKm Int?
+  cadence      Int?
+
+  createdAt DateTime @default(now())
+
+  garminActivity GarminActivity?
+
+  @@index([completedAt])
+}
+
+/// Dados brutos importados do CSV do Garmin Connect. Vinculado a um WorkoutLog
+/// quando a data/horario coincide com um treino registrado manualmente.
+model GarminActivity {
+  id              String   @id @default(cuid())
+  externalId      String?  @unique
+  date            DateTime
+  activityType    String?
+  durationMinutes Int?
+  distanceKm      Float?
+  avgHeartRate    Int?
+  maxHeartRate    Int?
+  calories        Int?
+  steps           Int?
+  cadence         Int?
+  rawData         Json?
+  importedAt      DateTime @default(now())
+
+  workoutLogId String?     @unique
+  workoutLog   WorkoutLog? @relation(fields: [workoutLogId], references: [id])
+
+  plannedWorkoutId String?         @unique
+  plannedWorkout   PlannedWorkout? @relation("PlannedWorkoutToGarminActivity", fields: [plannedWorkoutId], references: [id])
+
+  @@index([date])
+}
+
+// ---------- Nutricao ----------
+
+/// Cache local de alimentos (USDA FoodData Central / Open Food Facts / cadastro
+/// proprio), macros por 100g. Uma vez consultado, fica salvo aqui para reuso
+/// sem depender da API externa.
+model FoodItem {
+  id              String     @id @default(cuid())
+  name            String
+  source          FoodSource
+  externalId      String?
+  caloriesPer100g Float
+  proteinPer100g  Float
+  carbsPer100g    Float
+  fatPer100g      Float
+  fiberPer100g    Float?
+  createdAt       DateTime   @default(now())
+
+  foodLogs FoodLog[]
+
+  @@unique([source, externalId])
+}
+
+/// Refeicao registrada. Os macros sao "congelados" (snapshot) no momento do
+/// registro para nao distorcer o historico se o FoodItem for editado depois.
+model FoodLog {
+  id         String   @id @default(cuid())
+  foodItemId String
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id])
+  date       DateTime @db.Date
+  mealType   MealType
+  grams      Float
+  time       DateTime?
+  notes      String?
+
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+  fiber    Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+/// Metas diarias vigentes a partir de startDate (endDate nulo = meta atual).
+model NutritionGoal {
+  id             String    @id @default(cuid())
+  startDate      DateTime  @db.Date
+  endDate        DateTime? @db.Date
+  caloriesTarget Int
+  proteinTarget  Int
+  carbsTarget    Int
+  fatTarget      Int
+  createdAt      DateTime  @default(now())
+
+  @@index([startDate])
+}
+
+// ---------- Sono e metricas diarias ----------
+
+model SleepLog {
+  id         String   @id @default(cuid())
+  date       DateTime @unique @db.Date
+  sleepAt    DateTime
+  wakeAt     DateTime
+  totalHours Float
+  quality    Int
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([date])
+}
+
+/// Metricas diarias complementares (peso corporal e FC de repouso) usadas
+/// pelo motor de insights para tendencia de peso e sinal precoce de fadiga.
+model BodyMetricLog {
+  id               String   @id @default(cuid())
+  date             DateTime @unique @db.Date
+  weightKg         Float?
+  restingHeartRate Int?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@index([date])
 }
