@@ -1,8 +1,5 @@
-"use client";
-
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { logout } from "@/app/login/actions";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -10,22 +7,15 @@ import {
 } from "@/components/ui/sidebar";
 
 export function UserMenu() {
-  const router = useRouter();
-
-  async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
-  }
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton tooltip="Sair" onClick={handleLogout}>
-          <LogOut />
-          <span>Sair</span>
-        </SidebarMenuButton>
+        <form action={logout}>
+          <SidebarMenuButton type="submit" tooltip="Sair">
+            <LogOut />
+            <span>Sair</span>
+          </SidebarMenuButton>
+        </form>
       </SidebarMenuItem>
     </SidebarMenu>
   );
