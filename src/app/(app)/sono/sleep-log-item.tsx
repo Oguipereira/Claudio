@@ -49,7 +49,7 @@ export function SleepLogItem({ log }: { log: SleepLog }) {
         size="icon-sm"
         disabled={isPending}
         aria-label="Excluir registro de sono"
-        onClick={() => startTransition(() => deleteSleepLogAction(log.id))}
+        onClick={() => startTransition(async () => await deleteSleepLogAction(log.id))}
       >
         <Trash2 />
       </Button>

@@ -60,7 +60,7 @@ export function WorkoutLogCard({
         size="icon-sm"
         disabled={isPending}
         aria-label="Excluir registro"
-        onClick={() => startTransition(() => deleteWorkoutLogAction(log.id))}
+        onClick={() => startTransition(async () => await deleteWorkoutLogAction(log.id))}
       >
         <Trash2 />
       </Button>

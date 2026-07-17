@@ -31,7 +31,7 @@ export function FoodLogItem({ log }: { log: FoodLogWithItem }) {
         size="icon-sm"
         disabled={isPending}
         aria-label="Excluir alimento"
-        onClick={() => startTransition(() => deleteFoodLogAction(log.id))}
+        onClick={() => startTransition(async () => await deleteFoodLogAction(log.id))}
       >
         <Trash2 />
       </Button>

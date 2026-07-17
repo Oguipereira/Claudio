@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { toDateKey } from "@/domain/workouts/week";
+import { fromPrismaDate, toDateKey } from "@/domain/workouts/week";
 import { STATUS_LABEL } from "@/domain/workouts/labels";
 import { CATEGORY_ICON } from "@/components/workout-category-icon";
 import {
@@ -63,8 +63,8 @@ export function WorkoutCard({
     const formData = new FormData();
     formData.set("id", workout.id);
     formData.set("status", status);
-    startTransition(() => {
-      updatePlannedWorkoutAction({}, formData);
+    startTransition(async () => {
+      await updatePlannedWorkoutAction({}, formData);
     });
   }
 
@@ -74,15 +74,15 @@ export function WorkoutCard({
     formData.set("id", workout.id);
     formData.set("date", toDateKey(date));
     formData.set("status", "RESCHEDULED");
-    startTransition(() => {
-      updatePlannedWorkoutAction({}, formData);
+    startTransition(async () => {
+      await updatePlannedWorkoutAction({}, formData);
+      setRescheduleOpen(false);
     });
-    setRescheduleOpen(false);
   }
 
   function handleDelete() {
-    startTransition(() => {
-      deletePlannedWorkoutAction(workout.id);
+    startTransition(async () => {
+      await deletePlannedWorkoutAction(workout.id);
     });
   }
 
@@ -143,7 +143,11 @@ export function WorkoutCard({
           <DialogHeader>
             <DialogTitle>Remarcar treino</DialogTitle>
           </DialogHeader>
-          <Calendar mode="single" selected={workout.date} onSelect={reschedule} />
+          <Calendar
+            mode="single"
+            selected={fromPrismaDate(workout.date)}
+            onSelect={reschedule}
+          />
         </DialogContent>
       </Dialog>
     </div>
