@@ -1,6 +1,6 @@
 import { addDays } from "date-fns";
 import { prisma } from "@/server/db";
-import { toPrismaDate } from "@/domain/date";
+import { nowInAppTimezone, toPrismaDate } from "@/domain/date";
 import type { SetNutritionGoalInput } from "@/domain/nutrition/schemas";
 
 export function getCurrentNutritionGoal() {
@@ -11,13 +11,13 @@ export function getCurrentNutritionGoal() {
 }
 
 export async function setNutritionGoal(input: SetNutritionGoalInput) {
-  const today = toPrismaDate(new Date());
+  const today = toPrismaDate(nowInAppTimezone());
 
   const current = await getCurrentNutritionGoal();
   if (current) {
     await prisma.nutritionGoal.update({
       where: { id: current.id },
-      data: { endDate: toPrismaDate(addDays(new Date(), -1)) },
+      data: { endDate: toPrismaDate(addDays(nowInAppTimezone(), -1)) },
     });
   }
 

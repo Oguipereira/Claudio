@@ -1,6 +1,6 @@
 import { subDays } from "date-fns";
 import { prisma } from "@/server/db";
-import { toDateKey, toPrismaDate, fromPrismaDate } from "@/domain/date";
+import { toDateKey, toPrismaDate, fromPrismaDate, nowInAppTimezone } from "@/domain/date";
 import {
   computeAcwr,
   computeDailyLoad,
@@ -17,7 +17,7 @@ const TREND_WINDOW_DAYS = 35;
 const RECENT_WINDOW_DAYS = 7;
 
 export async function computeInsights(): Promise<Insight[]> {
-  const today = new Date();
+  const today = nowInAppTimezone();
   const sevenDaysAgo = subDays(today, RECENT_WINDOW_DAYS);
   const trendStart = subDays(today, TREND_WINDOW_DAYS);
 

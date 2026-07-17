@@ -3,7 +3,7 @@ import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { parseDateKey, toDateKey } from "@/domain/date";
+import { nowInAppTimezone, parseDateKey, toDateKey } from "@/domain/date";
 import { sumMacros } from "@/domain/nutrition/macros";
 import { MEAL_LABEL, MEAL_ORDER } from "@/domain/nutrition/labels";
 import { listFoodLogsForDate } from "@/server/nutrition/food-logs";
@@ -18,7 +18,7 @@ export default async function NutricaoPage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const params = await searchParams;
-  const date = params.date ? parseDateKey(params.date) : new Date();
+  const date = params.date ? parseDateKey(params.date) : nowInAppTimezone();
   const dateKey = toDateKey(date);
 
   const [logs, goal] = await Promise.all([
@@ -29,7 +29,7 @@ export default async function NutricaoPage({
   const total = sumMacros(logs);
   const prevDateKey = toDateKey(addDays(date, -1));
   const nextDateKey = toDateKey(addDays(date, 1));
-  const todayKey = toDateKey(new Date());
+  const todayKey = toDateKey(nowInAppTimezone());
 
   return (
     <div className="flex flex-col gap-6">

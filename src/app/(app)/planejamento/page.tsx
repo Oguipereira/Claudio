@@ -10,6 +10,7 @@ import {
 } from "@/domain/workouts/week";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { nowInAppTimezone } from "@/domain/date";
 import { listPlannedWorkoutsInRange } from "@/server/workouts/planned-workouts";
 import { listWorkoutTemplates } from "@/server/workouts/templates";
 import { WeekView } from "./week-view";
@@ -20,7 +21,7 @@ export default async function PlanejamentoPage({
   searchParams: Promise<{ week?: string }>;
 }) {
   const params = await searchParams;
-  const reference = params.week ? parseDateKey(params.week) : new Date();
+  const reference = params.week ? parseDateKey(params.week) : nowInAppTimezone();
   const weekStart = getWeekStart(reference);
   const weekEnd = getWeekEnd(reference);
   const days = getWeekDays(weekStart);
@@ -32,7 +33,7 @@ export default async function PlanejamentoPage({
 
   const prevWeekKey = toDateKey(addDays(weekStart, -7));
   const nextWeekKey = toDateKey(addDays(weekStart, 7));
-  const todayWeekKey = toDateKey(getWeekStart(new Date()));
+  const todayWeekKey = toDateKey(getWeekStart(nowInAppTimezone()));
 
   return (
     <div className="flex flex-col gap-4">

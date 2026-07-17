@@ -1,5 +1,6 @@
 import { addDays, format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { nowInAppTimezone } from "@/domain/date";
 import { getWeekStart } from "@/domain/workouts/week";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,7 @@ export function TrainingHeatmap({
   counts: Map<string, number>;
   weeks?: number;
 }) {
-  const today = new Date();
+  const today = nowInAppTimezone();
   const start = getWeekStart(subDays(today, (weeks - 1) * 7));
 
   const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(start, i));

@@ -1,11 +1,17 @@
 import { subDays } from "date-fns";
 import { prisma } from "@/server/db";
-import { fromPrismaDate, toDateKey, toPrismaDate } from "@/domain/date";
+import {
+  dateKeyInAppTimezone,
+  fromPrismaDate,
+  nowInAppTimezone,
+  toDateKey,
+  toPrismaDate,
+} from "@/domain/date";
 import { getWeekEnd, getWeekStart } from "@/domain/workouts/week";
 import { bucketWeeklyVolume, lastNWeekStarts } from "@/domain/stats/weekly-volume";
 
 export async function getWeeklyVolumeChartData(weeks: number) {
-  const weekStarts = lastNWeekStarts(weeks);
+  const weekStarts = lastNWeekStarts(weeks, nowInAppTimezone());
   const rangeStart = toPrismaDate(weekStarts[0]);
 
   const logs = await prisma.workoutLog.findMany({
@@ -17,8 +23,8 @@ export async function getWeeklyVolumeChartData(weeks: number) {
 }
 
 export async function getCurrentWeekPlannedWorkouts() {
-  const weekStart = getWeekStart(new Date());
-  const weekEnd = getWeekEnd(new Date());
+  const weekStart = getWeekStart(nowInAppTimezone());
+  const weekEnd = getWeekEnd(nowInAppTimezone());
 
   return prisma.plannedWorkout.findMany({
     where: {
@@ -30,7 +36,7 @@ export async function getCurrentWeekPlannedWorkouts() {
 }
 
 export async function getTodayPlannedWorkouts() {
-  const today = toPrismaDate(new Date());
+  const today = toPrismaDate(nowInAppTimezone());
   return prisma.plannedWorkout.findMany({
     where: { date: today },
     include: { template: true },
@@ -67,7 +73,7 @@ export async function getHeartRateTrend(limit: number) {
 }
 
 export async function getNutritionTrend(days: number) {
-  const start = toPrismaDate(subDays(new Date(), days - 1));
+  const start = toPrismaDate(subDays(nowInAppTimezone(), days - 1));
   const logs = await prisma.foodLog.findMany({
     where: { date: { gte: start } },
     select: { date: true, calories: true, protein: true, carbs: true, fat: true },
@@ -87,7 +93,7 @@ export async function getNutritionTrend(days: number) {
 }
 
 export async function getSleepTrend(days: number) {
-  const start = toPrismaDate(subDays(new Date(), days - 1));
+  const start = toPrismaDate(subDays(nowInAppTimezone(), days - 1));
   return prisma.sleepLog.findMany({
     where: { date: { gte: start } },
     orderBy: { date: "asc" },
@@ -96,7 +102,7 @@ export async function getSleepTrend(days: number) {
 }
 
 export async function getTrainingHeatmap(days: number) {
-  const start = toPrismaDate(subDays(new Date(), days - 1));
+  const start = toPrismaDate(subDays(nowInAppTimezone(), days - 1));
   const logs = await prisma.workoutLog.findMany({
     where: { completedAt: { gte: start } },
     select: { completedAt: true },
@@ -104,7 +110,7 @@ export async function getTrainingHeatmap(days: number) {
 
   const counts = new Map<string, number>();
   for (const log of logs) {
-    const key = toDateKey(log.completedAt);
+    const key = dateKeyInAppTimezone(log.completedAt);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;

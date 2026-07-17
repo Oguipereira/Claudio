@@ -1,5 +1,7 @@
 import Papa from "papaparse";
+import { fromZonedTime } from "date-fns-tz";
 import { parsePaceToSeconds } from "@/domain/workouts/pace";
+import { APP_TIMEZONE } from "@/domain/date";
 
 export type ParsedGarminActivity = {
   externalId: string;
@@ -82,7 +84,10 @@ export function parseGarminActivitiesCsv(csvText: string): ParsedGarminActivity[
       const activityType = row["Tipo de atividade"];
       if (!dateStr || !activityType) return null;
 
-      const date = new Date(dateStr.replace(" ", "T"));
+      // O Garmin Connect exporta o horario no fuso local do usuario (Brasil),
+      // nao em UTC -- interpretamos explicitamente nesse fuso para nao
+      // depender do fuso do processo que roda o import (Vercel usa UTC).
+      const date = fromZonedTime(dateStr.replace(" ", "T"), APP_TIMEZONE);
       if (Number.isNaN(date.getTime())) return null;
 
       return {

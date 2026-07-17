@@ -1,5 +1,5 @@
 import { averageHours, averageQuality, currentStreak } from "@/domain/sleep/aggregates";
-import { fromPrismaDate, toDateKey } from "@/domain/date";
+import { fromPrismaDate, nowInAppTimezone, toDateKey } from "@/domain/date";
 import { listRecentSleepLogs } from "@/server/sleep/sleep-logs";
 import { LogSleepDialog } from "./log-sleep-dialog";
 import { SleepStats } from "./sleep-stats";
@@ -12,7 +12,7 @@ export default async function SonoPage() {
   const quality = averageQuality(logs.slice(0, 7));
   const streak = currentStreak(
     logs.map((log) => toDateKey(fromPrismaDate(log.date))),
-    toDateKey(new Date()),
+    toDateKey(nowInAppTimezone()),
   );
 
   return (

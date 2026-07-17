@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import { Button } from "@/components/ui/button";
-import { toDateKey } from "@/domain/workouts/week";
+import { fromPrismaDate, toDateKey } from "@/domain/workouts/week";
 import { AddWorkoutDialog } from "./add-workout-dialog";
 import { WorkoutCard } from "./workout-card";
 
@@ -27,10 +27,19 @@ export function WeekView({
 }) {
   const [dialogDate, setDialogDate] = useState<string | null>(null);
 
+  // `days` e `plannedWorkouts` vem do servidor via props (RSC): sao objetos
+  // Date que ja cruzaram a fronteira servidor->cliente. O servidor (Vercel)
+  // roda em UTC e o navegador roda no fuso do usuario, entao formatar esses
+  // valores direto com getters locais do navegador pode acertar o dia
+  // errado. fromPrismaDate extrai o dia via getters UTC (nao dependem de
+  // fuso) e reconstroi a data no fuso local de quem esta formatando agora
+  // (o navegador), o que da o resultado certo.
+  const localDays = days.map(fromPrismaDate);
+
   const byDay = new Map<string, PlannedWorkoutWithRelations[]>();
-  for (const day of days) byDay.set(toDateKey(day), []);
+  for (const day of localDays) byDay.set(toDateKey(day), []);
   for (const workout of plannedWorkouts) {
-    const key = toDateKey(workout.date);
+    const key = toDateKey(fromPrismaDate(workout.date));
     byDay.get(key)?.push(workout);
   }
 
@@ -39,7 +48,7 @@ export function WeekView({
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
-        {days.map((day) => {
+        {localDays.map((day) => {
           const key = toDateKey(day);
           const workouts = byDay.get(key) ?? [];
           const isToday = key === today;

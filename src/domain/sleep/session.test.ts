@@ -19,4 +19,12 @@ describe("computeSleepSession", () => {
     const result = computeSleepSession("2026-07-15", "22:30", "06:15");
     expect(result.totalHours).toBe(7.75);
   });
+
+  it("interpreta o horario digitado como fuso do Brasil, nao do processo", () => {
+    // 23:00 no Brasil (UTC-3) deve virar 02:00 UTC do dia seguinte,
+    // independente do fuso em que o teste/servidor estao rodando.
+    const result = computeSleepSession("2026-07-15", "23:00", "07:00");
+    expect(result.sleepAt.toISOString()).toBe("2026-07-16T02:00:00.000Z");
+    expect(result.wakeAt.toISOString()).toBe("2026-07-16T10:00:00.000Z");
+  });
 });

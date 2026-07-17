@@ -1,6 +1,7 @@
+import { fromZonedTime } from "date-fns-tz";
 import { prisma } from "@/server/db";
 import { computeMacrosForGrams } from "@/domain/nutrition/macros";
-import { parseDateKey, toPrismaDate } from "@/domain/date";
+import { APP_TIMEZONE, parseDateKey, toPrismaDate } from "@/domain/date";
 import type { LogFoodInput } from "@/domain/nutrition/schemas";
 
 export async function createFoodLog(input: LogFoodInput) {
@@ -17,7 +18,7 @@ export async function createFoodLog(input: LogFoodInput) {
       mealType: input.mealType,
       grams: input.grams,
       time: input.time
-        ? new Date(`${input.date}T${input.time}:00`)
+        ? fromZonedTime(`${input.date}T${input.time}:00`, APP_TIMEZONE)
         : undefined,
       notes: input.notes,
       calories: macros.calories,

@@ -1,5 +1,5 @@
-import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatLocal } from "@/domain/date";
 import { listRecentGarminActivities } from "@/server/garmin/import";
 import { formatSecondsToPace } from "@/domain/workouts/pace";
 import { UploadCsvForm } from "./upload-csv-form";
@@ -42,7 +42,7 @@ export default async function GarminPage() {
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="text-sm font-medium">{activity.activityType}</p>
                     <p className="shrink-0 text-xs text-muted-foreground">
-                      {format(activity.date, "d 'de' MMM, HH:mm", { locale: ptBR })}
+                      {formatLocal(activity.date, "d 'de' MMM, HH:mm", { locale: ptBR })}
                     </p>
                   </div>
                   {metrics.length > 0 ? (

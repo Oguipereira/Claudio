@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { daysUntilRace, getPeriodizationPhase, PHASE_LABEL, RACE_DATE } from "@/domain/race";
 import { currentStreak } from "@/domain/streak";
-import { fromPrismaDate, toDateKey } from "@/domain/date";
+import { formatLocal, fromPrismaDate, nowInAppTimezone, toDateKey } from "@/domain/date";
 import { CATEGORY_LABEL, STATUS_LABEL } from "@/domain/workouts/labels";
 import {
   getCurrentWeekPlannedWorkouts,
@@ -21,7 +21,7 @@ import { LogBodyMetricDialog } from "./log-body-metric-dialog";
 const CATEGORY_ICON = { STRENGTH: Dumbbell, HYROX: Flame, RUNNING: Footprints } as const;
 
 export default async function DashboardPage() {
-  const today = new Date();
+  const today = nowInAppTimezone();
   const [weekWorkouts, todayWorkouts, recentLogs, insights] = await Promise.all([
     getCurrentWeekPlannedWorkouts(),
     getTodayPlannedWorkouts(),
@@ -126,7 +126,7 @@ export default async function DashboardPage() {
                       {log.plannedWorkout.template?.name ?? log.plannedWorkout.adHocLabel ?? CATEGORY_LABEL[log.category]}
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
-                      {format(log.completedAt, "d MMM", { locale: ptBR })}
+                      {formatLocal(log.completedAt, "d MMM", { locale: ptBR })}
                     </span>
                   </div>
                 );

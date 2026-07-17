@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WeeklyVolumeChart } from "@/components/charts/weekly-volume-chart";
 import { TrendLineChart } from "@/components/charts/trend-line-chart";
 import { TrainingHeatmap } from "@/components/charts/training-heatmap";
-import { fromPrismaDate, toDateKey } from "@/domain/date";
+import { formatLocal, fromPrismaDate, nowInAppTimezone, toDateKey } from "@/domain/date";
 import {
   getHeartRateTrend,
   getNutritionTrend,
@@ -36,14 +36,14 @@ export default async function EstatisticasPage() {
   const paceData = runningTrend
     .filter((l) => l.paceSecPerKm)
     .map((l) => ({
-      label: format(l.completedAt, "d MMM", { locale: ptBR }),
+      label: formatLocal(l.completedAt, "d MMM", { locale: ptBR }),
       pace: l.paceSecPerKm,
     }));
 
   const distanceData = runningTrend
     .filter((l) => l.distanceKm)
     .map((l) => ({
-      label: format(l.completedAt, "d MMM", { locale: ptBR }),
+      label: formatLocal(l.completedAt, "d MMM", { locale: ptBR }),
       distance: l.distanceKm,
     }));
 
@@ -53,7 +53,7 @@ export default async function EstatisticasPage() {
   }));
 
   const nutritionData = Array.from({ length: NUTRITION_DAYS }, (_, i) => {
-    const day = subDays(new Date(), NUTRITION_DAYS - 1 - i);
+    const day = subDays(nowInAppTimezone(), NUTRITION_DAYS - 1 - i);
     const key = toDateKey(day);
     const totals = nutritionByDate.get(key);
     return {
