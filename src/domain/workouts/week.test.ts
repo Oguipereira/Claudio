@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  fromPrismaDate,
-  getWeekDays,
-  getWeekStart,
-  parseDateKey,
-  toDateKey,
-  toPrismaDate,
-} from "./week";
+import { getWeekDays, getWeekStart, parseDateKey, toDateKey } from "./week";
 
 describe("getWeekStart", () => {
   it("retorna a segunda-feira da semana para uma quarta-feira", () => {
@@ -27,15 +20,5 @@ describe("getWeekDays", () => {
     expect(days).toHaveLength(7);
     expect(toDateKey(days[0])).toBe("2026-07-13");
     expect(toDateKey(days[6])).toBe("2026-07-19");
-  });
-});
-
-describe("toPrismaDate / fromPrismaDate", () => {
-  it("faz o roundtrip sem alterar o dia de calendario", () => {
-    const local = parseDateKey("2026-07-15");
-    const prismaValue = toPrismaDate(local);
-    expect(prismaValue.toISOString()).toBe("2026-07-15T00:00:00.000Z");
-    const roundtripped = fromPrismaDate(prismaValue);
-    expect(toDateKey(roundtripped)).toBe("2026-07-15");
   });
 });

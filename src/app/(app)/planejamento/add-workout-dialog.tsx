@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Prisma } from "@/generated/prisma/client";
@@ -25,11 +25,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { parseDateKey } from "@/domain/workouts/week";
 import { CATEGORY_LABEL } from "@/domain/workouts/labels";
-import { addPlannedWorkoutAction, type ActionState } from "./actions";
+import { addPlannedWorkoutAction } from "./actions";
 
 type WorkoutTemplate = Prisma.WorkoutTemplateGetPayload<object>;
-
-const initialState: ActionState = {};
 
 export function AddWorkoutDialog({
   date,
@@ -43,10 +41,8 @@ export function AddWorkoutDialog({
   const [category, setCategory] = useState<keyof typeof CATEGORY_LABEL>("STRENGTH");
   const [templateId, setTemplateId] = useState<string>("");
   const [adHocLabel, setAdHocLabel] = useState("");
-  const [state, formAction, pending] = useActionState(
-    addPlannedWorkoutAction,
-    initialState,
-  );
+  const [error, setError] = useState<string | undefined>();
+  const [pending, startTransition] = useTransition();
 
   const templatesForCategory = useMemo(
     () => templates.filter((t) => t.category === category),
@@ -59,10 +55,16 @@ export function AddWorkoutDialog({
     setAdHocLabel("");
   }
 
-  useEffect(() => {
-    if (state === initialState) return;
-    if (!state.error) onOpenChange(false);
-  }, [state, onOpenChange]);
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      const result = await addPlannedWorkoutAction({}, formData);
+      if (result.error) setError(result.error);
+      else {
+        setError(undefined);
+        onOpenChange(false);
+      }
+    });
+  }
 
   if (!date) return null;
 
@@ -76,7 +78,7 @@ export function AddWorkoutDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form action={formAction} className="flex flex-col gap-4">
+        <form action={handleSubmit} className="flex flex-col gap-4">
           <input type="hidden" name="date" value={date} />
           <input type="hidden" name="category" value={category} />
           {templateId ? (
@@ -130,8 +132,8 @@ export function AddWorkoutDialog({
             <Textarea id="notes" name="notes" rows={2} />
           </div>
 
-          {state.error ? (
-            <p className="text-sm text-destructive">{state.error}</p>
+          {error ? (
+            <p className="text-sm text-destructive">{error}</p>
           ) : null}
 
           <DialogFooter>
