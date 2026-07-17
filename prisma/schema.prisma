@@ -122,6 +122,7 @@ model GarminActivity {
   distanceKm      Float?
   avgHeartRate    Int?
   maxHeartRate    Int?
+  paceSecPerKm    Int?
   calories        Int?
   steps           Int?
   cadence         Int?
