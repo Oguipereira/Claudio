@@ -6,6 +6,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
+// Todas as paginas autenticadas dependem de dados atuais do banco e ficam
+// atras do proxy de sessao; nao fazem sentido pre-renderizadas estaticamente.
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({
   children,
 }: {
