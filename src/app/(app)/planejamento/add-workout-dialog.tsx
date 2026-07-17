@@ -24,15 +24,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { parseDateKey } from "@/domain/workouts/week";
+import { CATEGORY_LABEL } from "@/domain/workouts/labels";
 import { addPlannedWorkoutAction, type ActionState } from "./actions";
 
 type WorkoutTemplate = Prisma.WorkoutTemplateGetPayload<object>;
-
-const CATEGORY_LABEL = {
-  STRENGTH: "Musculação",
-  HYROX: "HYROX",
-  RUNNING: "Corrida",
-} as const;
 
 const initialState: ActionState = {};
 

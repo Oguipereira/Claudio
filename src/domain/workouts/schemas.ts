@@ -26,9 +26,27 @@ export const updatePlannedWorkoutSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 
+const optionalNumber = z.preprocess((val) => {
+  if (val === "" || val === null || val === undefined) return undefined;
+  return val;
+}, z.coerce.number().optional());
+
+export const logWorkoutSchema = z.object({
+  plannedWorkoutId: z.string().min(1),
+  durationMinutes: optionalNumber,
+  avgHeartRate: optionalNumber,
+  maxHeartRate: optionalNumber,
+  calories: optionalNumber,
+  distanceKm: optionalNumber,
+  pace: z.string().optional(),
+  cadence: optionalNumber,
+  notes: z.string().max(2000).optional(),
+});
+
 export type CreatePlannedWorkoutInput = z.infer<
   typeof createPlannedWorkoutSchema
 >;
 export type UpdatePlannedWorkoutInput = z.infer<
   typeof updatePlannedWorkoutSchema
 >;
+export type LogWorkoutInput = z.infer<typeof logWorkoutSchema>;

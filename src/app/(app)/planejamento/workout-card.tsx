@@ -5,9 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   CalendarClock,
   Check,
-  Dumbbell,
-  Flame,
-  Footprints,
   MoreVertical,
   RotateCcw,
   Trash2,
@@ -30,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { toDateKey } from "@/domain/workouts/week";
+import { STATUS_LABEL } from "@/domain/workouts/labels";
+import { CATEGORY_ICON } from "@/components/workout-category-icon";
 import {
   deletePlannedWorkoutAction,
   updatePlannedWorkoutAction,
@@ -38,19 +37,6 @@ import {
 type PlannedWorkoutWithRelations = Prisma.PlannedWorkoutGetPayload<{
   include: { template: true; workoutLog: true };
 }>;
-
-const CATEGORY_ICON = {
-  STRENGTH: Dumbbell,
-  HYROX: Flame,
-  RUNNING: Footprints,
-} as const;
-
-const STATUS_LABEL = {
-  PLANNED: "Planejado",
-  COMPLETED: "Concluído",
-  RESCHEDULED: "Remarcado",
-  CANCELLED: "Cancelado",
-} as const;
 
 const STATUS_VARIANT = {
   PLANNED: "outline",
