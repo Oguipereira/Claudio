@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { formatSecondsToPace } from "@/domain/workouts/pace";
 
 export type TrendSeries = {
   key: string;
@@ -16,12 +17,21 @@ export type TrendSeries = {
   color: string;
 };
 
+// Passar uma funcao como prop de Server Component para Client Component nao
+// e permitido (nao e serializavel pelo RSC); por isso o formato do eixo Y e
+// escolhido por um identificador serializavel em vez de receber a funcao.
+export type YAxisFormat = "pace";
+
+const Y_FORMATTERS: Record<YAxisFormat, (value: number) => string> = {
+  pace: (value) => formatSecondsToPace(value),
+};
+
 export function TrendLineChart({
   data,
   series,
   yUnit,
   yDomain,
-  yTickFormatter,
+  yFormat,
   referenceValue,
   referenceLabel,
 }: {
@@ -29,13 +39,14 @@ export function TrendLineChart({
   series: TrendSeries[];
   yUnit?: string;
   yDomain?: [number | "auto", number | "auto"];
-  yTickFormatter?: (value: number) => string;
+  yFormat?: YAxisFormat;
   referenceValue?: number;
   referenceLabel?: string;
 }) {
   const chartConfig = Object.fromEntries(
     series.map((s) => [s.key, { label: s.label, color: s.color }]),
   ) satisfies ChartConfig;
+  const yTickFormatter = yFormat ? Y_FORMATTERS[yFormat] : undefined;
 
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">

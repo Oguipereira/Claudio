@@ -5,7 +5,6 @@ import { WeeklyVolumeChart } from "@/components/charts/weekly-volume-chart";
 import { TrendLineChart } from "@/components/charts/trend-line-chart";
 import { TrainingHeatmap } from "@/components/charts/training-heatmap";
 import { fromPrismaDate, toDateKey } from "@/domain/date";
-import { formatSecondsToPace } from "@/domain/workouts/pace";
 import {
   getHeartRateTrend,
   getNutritionTrend,
@@ -108,7 +107,7 @@ export default async function EstatisticasPage() {
                 data={paceData}
                 series={[{ key: "pace", label: "Ritmo", color: "var(--chart-3)" }]}
                 yUnit="min/km"
-                yTickFormatter={(v) => formatSecondsToPace(v)}
+                yFormat="pace"
                 yDomain={["auto", "auto"]}
               />
             )}
