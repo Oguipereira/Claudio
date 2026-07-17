@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WeeklyVolumeChart } from "@/components/charts/weekly-volume-chart";
 import { TrendLineChart } from "@/components/charts/trend-line-chart";
 import { TrainingHeatmap } from "@/components/charts/training-heatmap";
-import { fromPrismaDate } from "@/domain/date";
+import { fromPrismaDate, toDateKey } from "@/domain/date";
 import { formatSecondsToPace } from "@/domain/workouts/pace";
 import {
   getHeartRateTrend,
@@ -55,7 +55,7 @@ export default async function EstatisticasPage() {
 
   const nutritionData = Array.from({ length: NUTRITION_DAYS }, (_, i) => {
     const day = subDays(new Date(), NUTRITION_DAYS - 1 - i);
-    const key = day.toISOString().slice(0, 10);
+    const key = toDateKey(day);
     const totals = nutritionByDate.get(key);
     return {
       label: format(day, "d MMM", { locale: ptBR }),

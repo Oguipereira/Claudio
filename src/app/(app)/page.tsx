@@ -14,15 +14,19 @@ import {
   getRecentWorkoutLogs,
   getTodayPlannedWorkouts,
 } from "@/server/stats/queries";
+import { computeInsights } from "@/server/insights/generate";
+import { InsightsList } from "@/components/insights-list";
+import { LogBodyMetricDialog } from "./log-body-metric-dialog";
 
 const CATEGORY_ICON = { STRENGTH: Dumbbell, HYROX: Flame, RUNNING: Footprints } as const;
 
 export default async function DashboardPage() {
   const today = new Date();
-  const [weekWorkouts, todayWorkouts, recentLogs] = await Promise.all([
+  const [weekWorkouts, todayWorkouts, recentLogs, insights] = await Promise.all([
     getCurrentWeekPlannedWorkouts(),
     getTodayPlannedWorkouts(),
     getRecentWorkoutLogs(6),
+    computeInsights(),
   ]);
 
   const completed = weekWorkouts.filter((w) => w.status === "COMPLETED");
@@ -59,6 +63,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <Badge variant="outline">{PHASE_LABEL[phase]}</Badge>
+          <LogBodyMetricDialog />
         </div>
       </div>
 
@@ -68,6 +73,15 @@ export default async function DashboardPage() {
         <StatTile label="Calorias em treino (semana)" value={Math.round(weekCalories)} unit="kcal" />
         <StatTile label="Sequência de dias treinando" value={streak} unit="dias" />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Análises</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InsightsList insights={insights} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>

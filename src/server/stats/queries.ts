@@ -1,6 +1,6 @@
 import { subDays } from "date-fns";
 import { prisma } from "@/server/db";
-import { toPrismaDate } from "@/domain/date";
+import { fromPrismaDate, toDateKey, toPrismaDate } from "@/domain/date";
 import { getWeekEnd, getWeekStart } from "@/domain/workouts/week";
 import { bucketWeeklyVolume, lastNWeekStarts } from "@/domain/stats/weekly-volume";
 
@@ -75,7 +75,7 @@ export async function getNutritionTrend(days: number) {
 
   const byDate = new Map<string, { calories: number; protein: number; carbs: number; fat: number }>();
   for (const log of logs) {
-    const key = log.date.toISOString().slice(0, 10);
+    const key = toDateKey(fromPrismaDate(log.date));
     const acc = byDate.get(key) ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
     acc.calories += log.calories;
     acc.protein += log.protein;
@@ -104,7 +104,7 @@ export async function getTrainingHeatmap(days: number) {
 
   const counts = new Map<string, number>();
   for (const log of logs) {
-    const key = log.completedAt.toISOString().slice(0, 10);
+    const key = toDateKey(log.completedAt);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;
