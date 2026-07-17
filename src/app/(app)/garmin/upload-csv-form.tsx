@@ -38,9 +38,9 @@ export function UploadCsvForm() {
 
       {result?.summary ? (
         <p className="text-sm text-muted-foreground">
-          {result.summary.imported} atividades importadas, {result.summary.linked}{" "}
-          vinculadas automaticamente a treinos registrados, {result.summary.skipped}{" "}
-          já existiam e foram ignoradas.
+          {result.summary.imported} atividades importadas — {result.summary.createdWorkouts}{" "}
+          viraram novos treinos concluídos, {result.summary.linked} vinculadas a treinos já
+          registrados, {result.summary.skipped} já existiam e foram ignoradas.
         </p>
       ) : null}
     </div>

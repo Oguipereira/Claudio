@@ -5,6 +5,7 @@ export type ParsedGarminActivity = {
   externalId: string;
   date: Date;
   activityType: string;
+  title: string | null;
   durationMinutes: number | null;
   distanceKm: number | null;
   avgHeartRate: number | null;
@@ -58,6 +59,17 @@ function parseGarminPace(value: string | undefined): number | null {
   return parsePaceToSeconds(value.trim());
 }
 
+/// Mapeia o tipo de atividade em texto livre do Garmin para uma categoria do
+/// app. Corrida (ar livre ou esteira) mapeia para RUNNING, que e a unica
+/// categoria com campos de ritmo/distancia fazendo sentido; qualquer outra
+/// atividade (cardio indoor, bike, etc.) cai em STRENGTH como categoria
+/// generica de "sessao de academia", ja que o app nao tem uma categoria de
+/// cardio dedicada. HYROX nunca e inferido automaticamente -- so é atribuído
+/// quando o proprio usuario planeja um treino HYROX.
+export function inferWorkoutCategory(activityType: string): "STRENGTH" | "RUNNING" {
+  return activityType.toLowerCase().includes("corrida") ? "RUNNING" : "STRENGTH";
+}
+
 export function parseGarminActivitiesCsv(csvText: string): ParsedGarminActivity[] {
   const { data } = Papa.parse<Record<string, string>>(csvText, {
     header: true,
@@ -77,6 +89,7 @@ export function parseGarminActivitiesCsv(csvText: string): ParsedGarminActivity[
         externalId: `${activityType}:${dateStr}`,
         date,
         activityType,
+        title: row["Título"]?.trim() || null,
         durationMinutes: parseGarminDuration(row["Tempo total"]),
         distanceKm: parseGarminNumber(row["Distância"]),
         avgHeartRate: parseGarminNumber(row["FC Média"]),

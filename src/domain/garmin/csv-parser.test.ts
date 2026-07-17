@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGarminActivitiesCsv } from "./csv-parser";
+import { inferWorkoutCategory, parseGarminActivitiesCsv } from "./csv-parser";
 
 const SAMPLE_CSV = `Tipo de atividade,Data,Favorito,Título,Distância,Calorias,Tempo total,FC Média,FC máxima,Cadência bicicleta média,Cadência de bicicleta máxima,Velocidade média,Velocidade máxima,Subida total,Descida total,Comprimento médio da passada,Training Stress Score®,Passos,Descompressão,Tempo da melhor volta,Número de voltas,Tempo em movimento,Tempo transcorrido,Elevação mínima,Elevação máxima
 Cardiovascular,2026-07-16 17:48:19,false,"Cardio","0.00","509","01:07:05","136","188","--","--","--","--","--","--","--","0.0","--","Não","01:07:05","1","00:00:00","01:07:36","--","--"
@@ -29,6 +29,7 @@ describe("parseGarminActivitiesCsv", () => {
   it("parseia uma corrida com ritmo, passos (com virgula) e distancia", () => {
     const run = activities[1];
     expect(run.activityType).toBe("Corrida");
+    expect(run.title).toBe("São Paulo Corrida");
     expect(run.distanceKm).toBe(2.49);
     expect(run.durationMinutes).toBe(44);
     expect(run.paceSecPerKm).toBe(17 * 60 + 46);
@@ -49,5 +50,17 @@ describe("parseGarminActivitiesCsv", () => {
   it("ignora linhas sem data ou tipo", () => {
     const withBlank = parseGarminActivitiesCsv(SAMPLE_CSV + "\n,,,,,,,,,,,,,,,,,,,,,,,,\n");
     expect(withBlank).toHaveLength(4);
+  });
+});
+
+describe("inferWorkoutCategory", () => {
+  it("mapeia corrida (ar livre ou esteira) para RUNNING", () => {
+    expect(inferWorkoutCategory("Corrida")).toBe("RUNNING");
+    expect(inferWorkoutCategory("Corrida em esteira")).toBe("RUNNING");
+  });
+
+  it("mapeia outras atividades para STRENGTH", () => {
+    expect(inferWorkoutCategory("Cardiovascular")).toBe("STRENGTH");
+    expect(inferWorkoutCategory("Ciclismo")).toBe("STRENGTH");
   });
 });
